@@ -1,0 +1,10 @@
+# Initial target. The probe discovers the closest authoritative zone at startup.
+targets:
+  - name: "ODOT Highway"
+    hostname: "highway.odot.state.or.us"
+    interval: 15m
+    timeout: 2s
+    udp_retries: 2
+    edns_udp_size: 1232
+    recursion_desired: false
+    record_types: [SOA, NS, A, AAAA]
