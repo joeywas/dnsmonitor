@@ -68,6 +68,35 @@ func TestAssessTruncation(t *testing.T) {
 	}
 }
 
+func TestEvaluateRcodeOutcomes(t *testing.T) {
+	for _, testCase := range []struct {
+		name       string
+		rcode      int
+		wantStatus string
+	}{
+		{name: "NOERROR completes", rcode: dns.RcodeSuccess, wantStatus: "PASS"},
+		{name: "NXDOMAIN is a valid negative answer", rcode: dns.RcodeNameError, wantStatus: "OBSERVED"},
+		{name: "REFUSED does not complete the query", rcode: dns.RcodeRefused, wantStatus: "FAIL"},
+		{name: "SERVFAIL does not complete the query", rcode: dns.RcodeServerFailure, wantStatus: "FAIL"},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			response := new(dns.Msg)
+			response.Response = true
+			response.Rcode = testCase.rcode
+			findings := Evaluate(response, "udp")
+			for _, finding := range findings {
+				if finding.Rule == "dns_rcode" {
+					if finding.Status != testCase.wantStatus {
+						t.Fatalf("dns_rcode status=%s, want %s", finding.Status, testCase.wantStatus)
+					}
+					return
+				}
+			}
+			t.Fatal("dns_rcode finding missing")
+		})
+	}
+}
+
 func responseWith(answer, authority, additional []dns.RR, truncated bool) *dns.Msg {
 	query := new(dns.Msg)
 	query.SetQuestion("example.test.", dns.TypeA)

@@ -1,10 +1,28 @@
 # Initial target. The probe discovers the closest authoritative zone at startup.
 targets:
-  - name: "ODOT Highway"
+  - name: "highway.odot.state.or.us RR A"
     hostname: "highway.odot.state.or.us"
     interval: 30m
     timeout: 5s
     udp_retries: 2
     edns_udp_size: 1232
     recursion_desired: false
-    record_types: [SOA, NS, A, AAAA]
+    #record_types: [SOA, NS, A, AAAA, CNAME, TXT]
+    record_types: [A, AAAA]
+    expected_answers:
+      A:
+        #rcode: NOERROR
+        answers: [159.121.71.106]
+  - name: "_acme-challenge.zmsa.odot.state.or.us RR CNAME"
+    hostname: "_acme-challenge.zmsa.odot.state.or.us"
+    interval: 30m
+    timeout: 5s
+    udp_retries: 2
+    edns_udp_size: 1232
+    recursion_desired: false
+    #record_types: [SOA, NS, A, AAAA, CNAME, TXT]
+    record_types: [CNAME]
+    expected_answers:
+      CNAME:
+        #rcode: NOERROR
+        answers: [07ce0f8572ce5522b2413e4a41f07a9b.autocerts.ves.volterra.io.]

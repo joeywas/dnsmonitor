@@ -2,7 +2,9 @@ package dnsprobe
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net"
 	"strings"
 	"time"
 
@@ -10,21 +12,26 @@ import (
 )
 
 type Attempt struct {
-	Transport       string    `json:"transport"`
-	Attempt         int       `json:"attempt"`
-	StartedAt       time.Time `json:"started_at"`
-	DurationMS      float64   `json:"duration_ms"`
-	Received        bool      `json:"received"`
-	Success         bool      `json:"success"`
-	Error           string    `json:"error,omitempty"`
-	ValidationError string    `json:"validation_error,omitempty"`
-	Rcode           string    `json:"rcode,omitempty"`
-	AA              bool      `json:"aa"`
-	TC              bool      `json:"tc"`
-	RA              bool      `json:"ra"`
-	Answers         int       `json:"answers"`
-	Authority       int       `json:"authority"`
-	Additional      int       `json:"additional"`
+	Transport         string    `json:"transport"`
+	Server            string    `json:"server,omitempty"`
+	Attempt           int       `json:"attempt"`
+	StartedAt         time.Time `json:"started_at"`
+	DurationMS        float64   `json:"duration_ms"`
+	Received          bool      `json:"received"`
+	Success           bool      `json:"success"`
+	Outcome           string    `json:"outcome"`
+	Error             string    `json:"error,omitempty"`
+	ValidationError   string    `json:"validation_error,omitempty"`
+	Rcode             string    `json:"rcode,omitempty"`
+	AA                bool      `json:"aa"`
+	TC                bool      `json:"tc"`
+	RA                bool      `json:"ra"`
+	Answers           int       `json:"answers"`
+	AnswerRecords     []string  `json:"answer_records,omitempty"`
+	Authority         int       `json:"authority"`
+	AuthorityRecords  []string  `json:"authority_records,omitempty"`
+	Additional        int       `json:"additional"`
+	AdditionalRecords []string  `json:"additional_records,omitempty"`
 }
 
 type SOAData struct {
@@ -42,7 +49,7 @@ type SOAData struct {
 // that it passed protocol/question validation and was authoritative as expected.
 // RCODEs such as NXDOMAIN are still valid DNS responses and therefore Success.
 func Query(ctx context.Context, server, qname string, qtype uint16, transport string, timeout time.Duration, ednsSize uint16, rd bool, attempt int) (Attempt, *dns.Msg, *dns.Msg) {
-	result := Attempt{Transport: transport, Attempt: attempt, StartedAt: time.Now().UTC()}
+	result := Attempt{Transport: transport, Server: server, Attempt: attempt, StartedAt: time.Now().UTC()}
 	query := new(dns.Msg)
 	query.SetQuestion(dns.Fqdn(qname), qtype)
 	query.RecursionDesired = rd
@@ -55,10 +62,12 @@ func Query(ctx context.Context, server, qname string, qtype uint16, transport st
 	resp, _, err := client.ExchangeContext(ctx, query, server)
 	result.DurationMS = float64(time.Since(start).Microseconds()) / 1000
 	if err != nil {
+		result.Outcome = classifyExchangeError(ctx, err)
 		result.Error = err.Error()
 		return result, query, nil
 	}
 	if resp == nil {
+		result.Outcome = "EMPTY_RESPONSE"
 		result.Error = "empty DNS response"
 		return result, query, nil
 	}
@@ -70,13 +79,56 @@ func Query(ctx context.Context, server, qname string, qtype uint16, transport st
 	}
 	result.AA, result.TC, result.RA = resp.Authoritative, resp.Truncated, resp.RecursionAvailable
 	result.Answers, result.Authority, result.Additional = len(resp.Answer), len(resp.Ns), len(resp.Extra)
+	result.AnswerRecords = answerRRStrings(resp.Answer)
+	result.AuthorityRecords = answerRRStrings(resp.Ns)
+	result.AdditionalRecords = answerRRStrings(resp.Extra)
 
 	if err := ValidateResponse(query, resp, true); err != nil {
+		result.Outcome = "INVALID_RESPONSE"
 		result.ValidationError = err.Error()
 		return result, query, resp
 	}
 	result.Success = true
+	result.Outcome = classifyResponse(resp)
 	return result, query, resp
+}
+
+func answerRRStrings(records []dns.RR) []string {
+	answers := make([]string, 0, len(records))
+	for _, record := range records {
+		answers = append(answers, record.String())
+	}
+	return answers
+}
+
+func classifyResponse(response *dns.Msg) string {
+	if response.Truncated {
+		return "TRUNCATED"
+	}
+	switch response.Rcode {
+	case dns.RcodeSuccess:
+		return "DNS_NOERROR"
+	case dns.RcodeNameError:
+		return "DNS_NXDOMAIN"
+	case dns.RcodeRefused:
+		return "DNS_REFUSED"
+	case dns.RcodeServerFailure:
+		return "DNS_SERVFAIL"
+	default:
+		return "DNS_OTHER_RCODE"
+	}
+}
+
+func classifyExchangeError(ctx context.Context, err error) string {
+	if errors.Is(ctx.Err(), context.Canceled) || errors.Is(err, context.Canceled) {
+		return "CANCELED"
+	}
+	var networkError net.Error
+	if errors.Is(ctx.Err(), context.DeadlineExceeded) || errors.Is(err, context.DeadlineExceeded) ||
+		errors.As(err, &networkError) && networkError.Timeout() {
+		return "TIMEOUT"
+	}
+	return "TRANSPORT_ERROR"
 }
 
 func ValidateResponse(query, response *dns.Msg, expectAA bool) error {

@@ -30,12 +30,14 @@ func Evaluate(resp *dns.Msg, transport string) []Finding {
 	}
 	if resp.Rcode == dns.RcodeSuccess {
 		findings = append(findings, Finding{"dns_rcode", "RFC 1035", "PASS", "NOERROR response received"})
+	} else if resp.Rcode == dns.RcodeNameError {
+		findings = append(findings, Finding{"dns_rcode", "RFC 1035", "OBSERVED", "NXDOMAIN is a valid DNS negative response; whether it is expected depends on the probe name"})
 	} else {
 		rcode := dns.RcodeToString[resp.Rcode]
 		if rcode == "" {
 			rcode = "unknown"
 		}
-		findings = append(findings, Finding{"dns_rcode", "RFC 1035", "FAIL", "Expected NOERROR; received " + rcode})
+		findings = append(findings, Finding{"dns_rcode", "RFC 1035", "FAIL", "DNS server returned " + rcode})
 	}
 	if transport == "tcp" {
 		findings = append(findings, Finding{"tcp_transport", "RFC 7766", "OBSERVED", "Valid DNS response received over TCP"})

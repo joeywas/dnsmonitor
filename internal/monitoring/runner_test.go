@@ -6,10 +6,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
 
+	"dns-monitor/internal/config"
 	"dns-monitor/internal/dnsprobe"
 
 	"github.com/miekg/dns"
@@ -113,6 +115,258 @@ func TestLookupPublicIP(t *testing.T) {
 				t.Errorf("lookupPublicIP=%#v, want %#v", got, testCase.want)
 			}
 		})
+	}
+}
+
+func TestAssessExpectedAnswer(t *testing.T) {
+	response := new(dns.Msg)
+	response.Rcode = dns.RcodeSuccess
+	response.Answer = []dns.RR{testARecord()}
+	nodataResponse := new(dns.Msg)
+	nodataResponse.Rcode = dns.RcodeSuccess
+	nxdomainResponse := new(dns.Msg)
+	nxdomainResponse.Rcode = dns.RcodeNameError
+
+	tests := []struct {
+		name       string
+		expected   config.ExpectedAnswer
+		response   *dns.Msg
+		wantStatus string
+	}{
+		{
+			name:     "exact answer matches",
+			expected: config.ExpectedAnswer{RCode: "NOERROR", Answers: []string{"192.0.2.1"}},
+			response: response, wantStatus: "PASS",
+		},
+		{
+			name:     "unexpected address fails",
+			expected: config.ExpectedAnswer{RCode: "NOERROR", Answers: []string{"192.0.2.2"}},
+			response: response, wantStatus: "FAIL",
+		},
+		{
+			name:     "empty expected set means NODATA",
+			expected: config.ExpectedAnswer{RCode: "NOERROR", Answers: []string{}},
+			response: response, wantStatus: "FAIL",
+		},
+		{
+			name:     "empty response matches NODATA expectation",
+			expected: config.ExpectedAnswer{RCode: "NOERROR", Answers: []string{}},
+			response: nodataResponse, wantStatus: "PASS",
+		},
+		{
+			name:     "rcode mismatch fails",
+			expected: config.ExpectedAnswer{RCode: "NOERROR", Answers: []string{"192.0.2.1"}},
+			response: nxdomainResponse, wantStatus: "FAIL",
+		},
+		{
+			name:     "missing response fails",
+			expected: config.ExpectedAnswer{RCode: "NOERROR", Answers: []string{"192.0.2.1"}},
+			response: nil, wantStatus: "FAIL",
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			finding := assessExpectedAnswer(dns.TypeA, test.expected, test.response)
+			if finding.Status != test.wantStatus {
+				t.Fatalf("status=%s, want %s: %s", finding.Status, test.wantStatus, finding.Detail)
+			}
+		})
+	}
+}
+
+func TestExpectedAnswerKeepsUDPAndTCPBaselineSeparate(t *testing.T) {
+	expected := config.ExpectedAnswer{RCode: "NOERROR", Answers: []string{"192.0.2.1"}}
+	udpResponse := new(dns.Msg)
+	udpResponse.Rcode = dns.RcodeSuccess
+	tcpResponse := new(dns.Msg)
+	tcpResponse.Rcode = dns.RcodeSuccess
+	tcpResponse.Answer = []dns.RR{testARecord()}
+
+	udpFinding := assessExpectedAnswer(dns.TypeA, expected, udpResponse)
+	tcpFinding := assessExpectedAnswer(dns.TypeA, expected, tcpResponse)
+	if udpFinding.Status != "FAIL" {
+		t.Fatalf("UDP assessment=%s, want FAIL", udpFinding.Status)
+	}
+	if tcpFinding.Status != "PASS" {
+		t.Fatalf("TCP baseline assessment=%s, want PASS", tcpFinding.Status)
+	}
+}
+
+func TestExpectedAnswerReportsDelegationReferral(t *testing.T) {
+	response := new(dns.Msg)
+	response.SetQuestion("highway.odot.state.or.us.", dns.TypeA)
+	response.Response = true
+	response.Rcode = dns.RcodeSuccess
+	response.Ns = []dns.RR{&dns.NS{
+		Hdr: dns.RR_Header{Name: "highway.odot.state.or.us.", Rrtype: dns.TypeNS, Class: dns.ClassINET},
+		Ns:  "ck01.example.test.",
+	}}
+	expected := config.ExpectedAnswer{RCode: "NOERROR", Answers: []string{"159.121.71.106"}}
+
+	finding := assessExpectedAnswer(dns.TypeA, expected, response)
+	if finding.Status != "INCONCLUSIVE" || !strings.Contains(finding.Detail, "ck01.example.test.") {
+		t.Fatalf("referral assessment=%#v, want inconclusive referral", finding)
+	}
+}
+
+func TestFollowReferralsUsesGlueAndReachesExpectedAnswer(t *testing.T) {
+	qname := "highway.odot.state.or.us."
+	referral := testReferral(qname, "ck01.example.test.", "192.0.2.53")
+	childResponse := testAResponse(qname, "159.121.71.106")
+	query := func(_ context.Context, server, gotName string, qtype uint16, transport string, _ time.Duration, _ uint16, _ bool, attemptNumber int) (dnsprobe.Attempt, *dns.Msg, *dns.Msg) {
+		if server != "192.0.2.53:53" || gotName != qname || qtype != dns.TypeA || transport != "udp" || attemptNumber != 1 {
+			t.Fatalf("unexpected referral query: server=%s qname=%s qtype=%s transport=%s attempt=%d", server, gotName, dns.TypeToString[qtype], transport, attemptNumber)
+		}
+		return dnsprobe.Attempt{Transport: transport, Server: server, Success: true}, nil, childResponse
+	}
+	resolver := func(context.Context, string) ([]string, error) {
+		t.Fatal("glue should avoid a separate nameserver lookup")
+		return nil, nil
+	}
+
+	result := followReferrals(context.Background(), qname, dns.TypeA, config.Duration(time.Second), 1232, false, referral, query, resolver)
+	if result.Assessment != "FOLLOWED" || len(result.Attempts) != 1 {
+		t.Fatalf("unexpected referral result: %#v", result)
+	}
+	finding := assessExpectedAnswer(dns.TypeA, config.ExpectedAnswer{RCode: "NOERROR", Answers: []string{"159.121.71.106"}}, result.Response)
+	if finding.Status != "PASS" {
+		t.Fatalf("expected answer status=%s, want PASS: %s", finding.Status, finding.Detail)
+	}
+}
+
+func TestFollowReferralsResolvesNameserverWithoutGlue(t *testing.T) {
+	qname := "highway.odot.state.or.us."
+	referral := testReferral(qname, "ck01.example.test.", "")
+	childResponse := testAResponse(qname, "159.121.71.106")
+	query := func(_ context.Context, server, _ string, _ uint16, transport string, _ time.Duration, _ uint16, _ bool, _ int) (dnsprobe.Attempt, *dns.Msg, *dns.Msg) {
+		if server != "192.0.2.54:53" {
+			t.Fatalf("query server=%s, want resolved glue-less nameserver IP", server)
+		}
+		return dnsprobe.Attempt{Transport: transport, Server: server, Success: true}, nil, childResponse
+	}
+	resolver := func(_ context.Context, name string) ([]string, error) {
+		if name != "ck01.example.test." {
+			t.Fatalf("resolver name=%s, want ck01.example.test.", name)
+		}
+		return []string{"192.0.2.54"}, nil
+	}
+
+	result := followReferrals(context.Background(), qname, dns.TypeA, config.Duration(time.Second), 1232, false, referral, query, resolver)
+	if result.Assessment != "FOLLOWED" || len(result.Attempts) != 1 || result.Response != childResponse {
+		t.Fatalf("unexpected referral result: %#v", result)
+	}
+}
+
+func TestFollowReferralsDetectsLoop(t *testing.T) {
+	qname := "highway.odot.state.or.us."
+	referral := testReferral(qname, "ck01.example.test.", "192.0.2.53")
+	query := func(_ context.Context, server, _ string, _ uint16, transport string, _ time.Duration, _ uint16, _ bool, _ int) (dnsprobe.Attempt, *dns.Msg, *dns.Msg) {
+		return dnsprobe.Attempt{Transport: transport, Server: server, Success: true}, nil, referral
+	}
+	resolver := func(context.Context, string) ([]string, error) { return nil, nil }
+
+	result := followReferrals(context.Background(), qname, dns.TypeA, config.Duration(time.Second), 1232, false, referral, query, resolver)
+	if result.Assessment != "INCONCLUSIVE" || !strings.Contains(result.Error, "loop") {
+		t.Fatalf("unexpected loop result: %#v", result)
+	}
+}
+
+func testReferral(qname, nameserver, glueIP string) *dns.Msg {
+	query := new(dns.Msg)
+	query.SetQuestion(qname, dns.TypeA)
+	response := new(dns.Msg)
+	response.SetReply(query)
+	response.Ns = []dns.RR{&dns.NS{
+		Hdr: dns.RR_Header{Name: qname, Rrtype: dns.TypeNS, Class: dns.ClassINET},
+		Ns:  nameserver,
+	}}
+	if glueIP != "" {
+		response.Extra = []dns.RR{&dns.A{
+			Hdr: dns.RR_Header{Name: nameserver, Rrtype: dns.TypeA, Class: dns.ClassINET},
+			A:   net.ParseIP(glueIP),
+		}}
+	}
+	return response
+}
+
+func testAResponse(qname, ip string) *dns.Msg {
+	response := new(dns.Msg)
+	query := new(dns.Msg)
+	query.SetQuestion(qname, dns.TypeA)
+	response.SetReply(query)
+	response.Authoritative = true
+	response.Answer = []dns.RR{&dns.A{
+		Hdr: dns.RR_Header{Name: qname, Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 300},
+		A:   net.ParseIP(ip),
+	}}
+	return response
+}
+
+func TestAssessExpectedAAAAAnswer(t *testing.T) {
+	response := new(dns.Msg)
+	response.Rcode = dns.RcodeSuccess
+	response.Answer = []dns.RR{&dns.AAAA{
+		Hdr:  dns.RR_Header{Name: "example.test.", Rrtype: dns.TypeAAAA, Class: dns.ClassINET, Ttl: 60},
+		AAAA: net.ParseIP("2001:db8::10"),
+	}}
+	expected := config.ExpectedAnswer{RCode: "NOERROR", Answers: []string{"2001:db8::10"}}
+
+	finding := assessExpectedAnswer(dns.TypeAAAA, expected, response)
+	if finding.Status != "PASS" {
+		t.Fatalf("AAAA expectation status=%s, want PASS: %s", finding.Status, finding.Detail)
+	}
+}
+
+func TestAssessExpectedCNAMEAndTXTAnswers(t *testing.T) {
+	for _, testCase := range []struct {
+		name     string
+		qtype    uint16
+		expected config.ExpectedAnswer
+		answer   string
+	}{
+		{
+			name:     "CNAME",
+			qtype:    dns.TypeCNAME,
+			expected: config.ExpectedAnswer{RCode: "NOERROR", Answers: []string{"target.example.test."}},
+			answer:   "example.test. 300 IN CNAME Target.Example.Test.",
+		},
+		{
+			name:     "TXT",
+			qtype:    dns.TypeTXT,
+			expected: config.ExpectedAnswer{RCode: "NOERROR", Answers: []string{`["v=spf1 -all"]`}},
+			answer:   `example.test. 300 IN TXT "v=spf1 -all"`,
+		},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			response := new(dns.Msg)
+			response.Rcode = dns.RcodeSuccess
+			rr, err := dns.NewRR(testCase.answer)
+			if err != nil {
+				t.Fatal(err)
+			}
+			response.Answer = []dns.RR{rr}
+			finding := assessExpectedAnswer(testCase.qtype, testCase.expected, response)
+			if finding.Status != "PASS" {
+				t.Fatalf("expected answer status=%s, want PASS: %s", finding.Status, finding.Detail)
+			}
+		})
+	}
+}
+
+func TestQueryNameForType(t *testing.T) {
+	for _, testCase := range []struct {
+		qtype uint16
+		want  string
+	}{
+		{qtype: dns.TypeSOA, want: "example.test."},
+		{qtype: dns.TypeNS, want: "example.test."},
+		{qtype: dns.TypeA, want: "www.example.test."},
+		{qtype: dns.TypeCNAME, want: "www.example.test."},
+		{qtype: dns.TypeTXT, want: "www.example.test."},
+	} {
+		if got := queryNameForType("example.test.", "www.example.test", testCase.qtype); got != testCase.want {
+			t.Errorf("queryNameForType(%s)=%q, want %q", dns.TypeToString[testCase.qtype], got, testCase.want)
+		}
 	}
 }
 
