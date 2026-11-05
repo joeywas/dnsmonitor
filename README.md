@@ -15,6 +15,7 @@ Go-based authoritative DNS probe for `highway.odot.state.or.us`.
 - Captures SOA fields and compares serials across responding authoritative nameservers.
 - If a UDP response is truncated (`TC=1`), ignores its record data, attempts TCP fallback, and records a separate fallback assessment.
 - Compares UDP Answer/Authority RRsets with a complete TCP response for an RFC 2181 Section 9 finding; differences isolated to Additional data do not require TC.
+- Looks up the runner's public IP and network metadata once per run using `https://ipconfig.io/json`; each target result includes `source_ip`, `source_region_name`, `source_city`, `source_asn`, and `source_asn_org`.
 - Emits one JSON document to stdout.
 
 ## Retry and finding semantics
@@ -34,6 +35,7 @@ Findings use `PASS`, `FAIL`, `INCONCLUSIVE`, or `OBSERVED`. `OBSERVED` is used f
 
 - Discovery relies on the machine's recursive resolver. Discovery is not itself an authoritative measurement.
 - Truncation fallback is opportunistic: it runs when a normal UDP query returns `TC=1`. The RRset comparison can be inconclusive when data changes between UDP and TCP queries; it does not generate an oversized query against production zones.
+- Source network details are observed by the HTTPS endpoint and may differ from the source address seen by authoritative DNS servers if HTTPS and DNS use different network routes or egress policies. Lookup failures are included as `source_ip_lookup_error` and do not stop DNS probes.
 - The engine does not yet perform DNSSEC validation, a dedicated EDNS matrix, negative-answer/NXDOMAIN/NODATA tests, or full RFC compliance scoring.
 - SOA consistency currently compares serials returned during the same run. It does not establish replication timing or whether a serial difference is acceptable during a zone transfer.
 - IPv6 nameserver addresses may not be reachable from every Azure network configuration.

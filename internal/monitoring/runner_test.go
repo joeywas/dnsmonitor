@@ -3,6 +3,8 @@ package monitoring
 import (
 	"context"
 	"net"
+	"net/http"
+	"net/http/httptest"
 	"strconv"
 	"sync/atomic"
 	"testing"
@@ -72,6 +74,45 @@ func TestExtractUsableSOAIgnoresTruncatedUDPData(t *testing.T) {
 	}
 	if got := extractUsableSOA(udpResponse, nil); got != nil {
 		t.Fatalf("expected no SOA when truncated UDP has no complete fallback, got %#v", got)
+	}
+}
+
+func TestLookupPublicIP(t *testing.T) {
+	for _, testCase := range []struct {
+		name       string
+		statusCode int
+		body       string
+		want       publicIPInfo
+		wantErr    bool
+	}{
+		{
+			name: "IPv4 and metadata", statusCode: http.StatusOK,
+			body: `{"ip":"203.0.113.8","region_name":"Oregon","city":"McMinnville","asn":"AS13857","asn_org":"Online Northwest"}`,
+			want: publicIPInfo{IP: "203.0.113.8", RegionName: "Oregon", City: "McMinnville", ASN: "AS13857", ASNOrg: "Online Northwest"},
+		},
+		{
+			name: "IPv6", statusCode: http.StatusOK,
+			body: `{"ip":"2001:db8::8","region_name":"Example","city":"Example City","asn":"AS64496","asn_org":"Example Network"}`,
+			want: publicIPInfo{IP: "2001:db8::8", RegionName: "Example", City: "Example City", ASN: "AS64496", ASNOrg: "Example Network"},
+		},
+		{name: "invalid response", statusCode: http.StatusOK, body: "address unavailable", wantErr: true},
+		{name: "HTTP failure", statusCode: http.StatusServiceUnavailable, body: "unavailable", wantErr: true},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, _ *http.Request) {
+				writer.WriteHeader(testCase.statusCode)
+				_, _ = writer.Write([]byte(testCase.body))
+			}))
+			defer server.Close()
+
+			got, err := lookupPublicIP(context.Background(), server.URL)
+			if (err != nil) != testCase.wantErr {
+				t.Fatalf("lookupPublicIP error=%v, wantErr=%t", err, testCase.wantErr)
+			}
+			if got != testCase.want {
+				t.Errorf("lookupPublicIP=%#v, want %#v", got, testCase.want)
+			}
+		})
 	}
 }
 

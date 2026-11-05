@@ -1,8 +1,13 @@
 [
   {
-    "started_at": "2026-11-05T04:31:18.429295535Z",
-    "finished_at": "2026-11-05T04:31:19.671828137Z",
+    "started_at": "2026-11-05T04:53:41.453120096Z",
+    "finished_at": "2026-11-05T04:53:42.417578377Z",
     "target": "highway.odot.state.or.us",
+    "source_ip": "69.168.127.224",
+    "source_region_name": "Oregon",
+    "source_city": "McMinnville",
+    "source_asn": "AS13857",
+    "source_asn_org": "Online Northwest",
     "discovery": {
       "queried_name": "highway.odot.state.or.us.",
       "zone_name": "odot.state.or.us.",
@@ -32,8 +37,8 @@
           {
             "transport": "udp",
             "attempt": 1,
-            "started_at": "2026-11-05T04:31:18.434450464Z",
-            "duration_ms": 32.529,
+            "started_at": "2026-11-05T04:53:41.45957571Z",
+            "duration_ms": 22.964,
             "received": true,
             "success": true,
             "rcode": "NOERROR",
@@ -47,8 +52,8 @@
           {
             "transport": "tcp",
             "attempt": 1,
-            "started_at": "2026-11-05T04:31:18.466995516Z",
-            "duration_ms": 89.712,
+            "started_at": "2026-11-05T04:53:41.482548728Z",
+            "duration_ms": 75.22,
             "received": true,
             "success": true,
             "rcode": "NOERROR",
@@ -132,23 +137,23 @@
           {
             "transport": "udp",
             "attempt": 1,
-            "started_at": "2026-11-05T04:31:18.556781955Z",
-            "duration_ms": 35.005,
+            "started_at": "2026-11-05T04:53:41.557852626Z",
+            "duration_ms": 34.875,
             "received": true,
             "success": true,
             "rcode": "NOERROR",
             "aa": true,
             "tc": false,
             "ra": false,
-            "answers": 2,
-            "authority": 0,
-            "additional": 1
+            "answers": 0,
+            "authority": 1,
+            "additional": 0
           },
           {
             "transport": "tcp",
             "attempt": 1,
-            "started_at": "2026-11-05T04:31:18.591792719Z",
-            "duration_ms": 190.363,
+            "started_at": "2026-11-05T04:53:41.59274093Z",
+            "duration_ms": 69.93,
             "received": true,
             "success": true,
             "rcode": "NOERROR",
@@ -200,8 +205,8 @@
           {
             "rule": "tc_bit_compliance",
             "standard": "RFC 2181 Section 9",
-            "status": "PASS",
-            "detail": "TC=0 and TCP confirms all required Answer and Authority records were present in UDP"
+            "status": "INCONCLUSIVE",
+            "detail": "UDP contains required RR data absent from the TCP reference"
           }
         ],
         "retry_assessment": "INCONCLUSIVE",
@@ -216,8 +221,8 @@
           {
             "transport": "udp",
             "attempt": 1,
-            "started_at": "2026-11-05T04:31:18.782192215Z",
-            "duration_ms": 35.233,
+            "started_at": "2026-11-05T04:53:41.662753436Z",
+            "duration_ms": 41.384,
             "received": true,
             "success": true,
             "rcode": "NOERROR",
@@ -231,8 +236,8 @@
           {
             "transport": "tcp",
             "attempt": 1,
-            "started_at": "2026-11-05T04:31:18.817432284Z",
-            "duration_ms": 64.714,
+            "started_at": "2026-11-05T04:53:41.704146593Z",
+            "duration_ms": 73.569,
             "received": true,
             "success": true,
             "rcode": "NOERROR",
@@ -300,8 +305,8 @@
           {
             "transport": "udp",
             "attempt": 1,
-            "started_at": "2026-11-05T04:31:18.882178654Z",
-            "duration_ms": 35.143,
+            "started_at": "2026-11-05T04:53:41.777750233Z",
+            "duration_ms": 30.267,
             "received": true,
             "success": true,
             "rcode": "NOERROR",
@@ -315,8 +320,8 @@
           {
             "transport": "tcp",
             "attempt": 1,
-            "started_at": "2026-11-05T04:31:18.917328785Z",
-            "duration_ms": 70.163,
+            "started_at": "2026-11-05T04:53:41.80802858Z",
+            "duration_ms": 66.681,
             "received": true,
             "success": true,
             "rcode": "NOERROR",
@@ -384,8 +389,8 @@
           {
             "transport": "udp",
             "attempt": 1,
-            "started_at": "2026-11-05T04:31:18.987515108Z",
-            "duration_ms": 70.188,
+            "started_at": "2026-11-05T04:53:41.874746179Z",
+            "duration_ms": 27.824,
             "received": true,
             "success": true,
             "rcode": "NOERROR",
@@ -399,8 +404,8 @@
           {
             "transport": "tcp",
             "attempt": 1,
-            "started_at": "2026-11-05T04:31:19.057709964Z",
-            "duration_ms": 114.256,
+            "started_at": "2026-11-05T04:53:41.902588602Z",
+            "duration_ms": 101.649,
             "received": true,
             "success": true,
             "rcode": "NOERROR",
@@ -484,23 +489,23 @@
           {
             "transport": "udp",
             "attempt": 1,
-            "started_at": "2026-11-05T04:31:19.171986086Z",
-            "duration_ms": 60.229,
+            "started_at": "2026-11-05T04:53:42.004266304Z",
+            "duration_ms": 28.116,
             "received": true,
             "success": true,
             "rcode": "NOERROR",
             "aa": true,
             "tc": false,
             "ra": false,
-            "answers": 2,
-            "authority": 0,
-            "additional": 1
+            "answers": 0,
+            "authority": 1,
+            "additional": 0
           },
           {
             "transport": "tcp",
             "attempt": 1,
-            "started_at": "2026-11-05T04:31:19.232220836Z",
-            "duration_ms": 89.58,
+            "started_at": "2026-11-05T04:53:42.032392445Z",
+            "duration_ms": 100.13,
             "received": true,
             "success": true,
             "rcode": "NOERROR",
@@ -552,8 +557,8 @@
           {
             "rule": "tc_bit_compliance",
             "standard": "RFC 2181 Section 9",
-            "status": "PASS",
-            "detail": "TC=0 and TCP confirms all required Answer and Authority records were present in UDP"
+            "status": "INCONCLUSIVE",
+            "detail": "UDP contains required RR data absent from the TCP reference"
           }
         ],
         "retry_assessment": "INCONCLUSIVE",
@@ -568,8 +573,8 @@
           {
             "transport": "udp",
             "attempt": 1,
-            "started_at": "2026-11-05T04:31:19.321846921Z",
-            "duration_ms": 29.909,
+            "started_at": "2026-11-05T04:53:42.132550359Z",
+            "duration_ms": 29.992,
             "received": true,
             "success": true,
             "rcode": "NOERROR",
@@ -583,8 +588,8 @@
           {
             "transport": "tcp",
             "attempt": 1,
-            "started_at": "2026-11-05T04:31:19.351767255Z",
-            "duration_ms": 100.472,
+            "started_at": "2026-11-05T04:53:42.162554957Z",
+            "duration_ms": 114.969,
             "received": true,
             "success": true,
             "rcode": "NOERROR",
@@ -652,8 +657,8 @@
           {
             "transport": "udp",
             "attempt": 1,
-            "started_at": "2026-11-05T04:31:19.452263357Z",
-            "duration_ms": 62.854,
+            "started_at": "2026-11-05T04:53:42.277550295Z",
+            "duration_ms": 34.999,
             "received": true,
             "success": true,
             "rcode": "NOERROR",
@@ -667,8 +672,8 @@
           {
             "transport": "tcp",
             "attempt": 1,
-            "started_at": "2026-11-05T04:31:19.515125636Z",
-            "duration_ms": 156.654,
+            "started_at": "2026-11-05T04:53:42.312558378Z",
+            "duration_ms": 104.974,
             "received": true,
             "success": true,
             "rcode": "NOERROR",

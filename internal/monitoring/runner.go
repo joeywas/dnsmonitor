@@ -2,8 +2,11 @@ package monitoring
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net"
+	"net/http"
 	"sort"
 	"strings"
 	"time"
@@ -17,12 +20,18 @@ import (
 )
 
 type RunResult struct {
-	StartedAt  time.Time      `json:"started_at"`
-	FinishedAt time.Time      `json:"finished_at"`
-	Target     string         `json:"target"`
-	Discovery  discovery.Zone `json:"discovery"`
-	Tests      []TestResult   `json:"tests"`
-	Errors     []string       `json:"errors,omitempty"`
+	StartedAt           time.Time      `json:"started_at"`
+	FinishedAt          time.Time      `json:"finished_at"`
+	Target              string         `json:"target"`
+	SourceIP            string         `json:"source_ip,omitempty"`
+	SourceRegionName    string         `json:"source_region_name,omitempty"`
+	SourceCity          string         `json:"source_city,omitempty"`
+	SourceASN           string         `json:"source_asn,omitempty"`
+	SourceASNOrg        string         `json:"source_asn_org,omitempty"`
+	SourceIPLookupError string         `json:"source_ip_lookup_error,omitempty"`
+	Discovery           discovery.Zone `json:"discovery"`
+	Tests               []TestResult   `json:"tests"`
+	Errors              []string       `json:"errors,omitempty"`
 }
 
 type TestResult struct {
@@ -37,11 +46,29 @@ type TestResult struct {
 	FallbackAssessment string               `json:"fallback_assessment,omitempty"`
 }
 
+type publicIPInfo struct {
+	IP         string `json:"ip"`
+	RegionName string `json:"region_name"`
+	City       string `json:"city"`
+	ASN        string `json:"asn"`
+	ASNOrg     string `json:"asn_org"`
+}
+
+const publicIPEndpoint = "https://ipconfig.io/json"
+
 func Run(ctx context.Context, cfg config.File) ([]RunResult, error) {
 	results := []RunResult{}
 	var runErr error
+	source, sourceIPErr := lookupPublicIP(ctx, publicIPEndpoint)
 	for _, target := range cfg.Targets {
-		r := RunResult{StartedAt: time.Now().UTC(), Target: target.Hostname}
+		r := RunResult{
+			StartedAt: time.Now().UTC(), Target: target.Hostname,
+			SourceIP: source.IP, SourceRegionName: source.RegionName, SourceCity: source.City,
+			SourceASN: source.ASN, SourceASNOrg: source.ASNOrg,
+		}
+		if sourceIPErr != nil {
+			r.SourceIPLookupError = sourceIPErr.Error()
+		}
 		zone, err := discovery.Discover(ctx, target.Hostname)
 		if err != nil {
 			r.Errors = append(r.Errors, err.Error())
@@ -187,6 +214,43 @@ func Run(ctx context.Context, cfg config.File) ([]RunResult, error) {
 		results = append(results, r)
 	}
 	return results, runErr
+}
+
+func lookupPublicIP(ctx context.Context, endpoint string) (publicIPInfo, error) {
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
+	if err != nil {
+		return publicIPInfo{}, fmt.Errorf("create public IP request: %w", err)
+	}
+	client := &http.Client{Timeout: 3 * time.Second}
+	response, err := client.Do(request)
+	if err != nil {
+		return publicIPInfo{}, fmt.Errorf("request public IP: %w", err)
+	}
+	defer response.Body.Close()
+	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
+		return publicIPInfo{}, fmt.Errorf("public IP endpoint returned HTTP %s", response.Status)
+	}
+	body, err := io.ReadAll(io.LimitReader(response.Body, 4097))
+	if err != nil {
+		return publicIPInfo{}, fmt.Errorf("read public IP response: %w", err)
+	}
+	if len(body) > 4096 {
+		return publicIPInfo{}, fmt.Errorf("public IP response is too large")
+	}
+	var info publicIPInfo
+	if err := json.Unmarshal(body, &info); err != nil {
+		return publicIPInfo{}, fmt.Errorf("decode public IP response: %w", err)
+	}
+	ip := net.ParseIP(strings.TrimSpace(info.IP))
+	if ip == nil {
+		return publicIPInfo{}, fmt.Errorf("public IP endpoint returned an invalid IP address")
+	}
+	info.IP = ip.String()
+	info.RegionName = strings.TrimSpace(info.RegionName)
+	info.City = strings.TrimSpace(info.City)
+	info.ASN = strings.TrimSpace(info.ASN)
+	info.ASNOrg = strings.TrimSpace(info.ASNOrg)
+	return info, nil
 }
 
 func queryTCPFallback(ctx context.Context, server, qname string, qtype uint16, timeout time.Duration, ednsSize uint16, rd bool, udpResponse *dns.Msg) (dnsprobe.Attempt, *dns.Msg, bool) {
