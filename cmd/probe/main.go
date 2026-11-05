@@ -6,7 +6,8 @@ import (
 	"flag"
 	"log"
 	"os"
-	"time"
+	"os/signal"
+	"syscall"
 
 	"dns-monitor/internal/config"
 	"dns-monitor/internal/monitoring"
@@ -21,8 +22,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
-	defer cancel()
+	// Each DNS attempt has its own configured timeout. Avoid imposing a
+	// shorter global deadline that could cancel a legitimate retry sequence.
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 
 	results, err := monitoring.Run(ctx, cfg)
 	if err != nil {
