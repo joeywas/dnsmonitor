@@ -1,0 +1,782 @@
+[
+  {
+    "started_at": "2026-11-05T07:16:46.904255916Z",
+    "finished_at": "2026-11-05T07:16:49.494068136Z",
+    "target": "highway.odot.state.or.us",
+    "source_ip": "69.168.127.224",
+    "source_region_name": "Oregon",
+    "source_city": "McMinnville",
+    "source_asn": "AS13857",
+    "source_asn_org": "Online Northwest",
+    "discovery": {
+      "queried_name": "highway.odot.state.or.us.",
+      "zone_name": "odot.state.or.us.",
+      "nameservers": [
+        {
+          "name": "lion.state.or.us.",
+          "ips": [
+            "198.232.200.20"
+          ]
+        },
+        {
+          "name": "puma.state.or.us.",
+          "ips": [
+            "198.232.202.40"
+          ]
+        }
+      ],
+      "discovery_method": "recursive-resolver SOA walk + NS lookup"
+    },
+    "tests": [
+      {
+        "server_name": "lion.state.or.us.",
+        "server_ip": "198.232.200.20",
+        "qname": "highway.odot.state.or.us.",
+        "qtype": "A",
+        "attempts": [
+          {
+            "transport": "udp",
+            "server": "198.232.200.20:53",
+            "attempt": 1,
+            "started_at": "2026-11-05T07:16:46.908996055Z",
+            "duration_ms": 24.873,
+            "received": true,
+            "success": true,
+            "outcome": "DNS_NOERROR",
+            "rcode": "NOERROR",
+            "aa": true,
+            "tc": false,
+            "ra": false,
+            "answers": 0,
+            "authority": 1,
+            "authority_records": [
+              "highway.odot.state.or.us.\t0\tIN\tNS\tck01-030fab2709-45a87fe0.odot.state.or.us."
+            ],
+            "additional": 0
+          },
+          {
+            "transport": "tcp",
+            "server": "198.232.200.20:53",
+            "attempt": 1,
+            "started_at": "2026-11-05T07:16:46.933887148Z",
+            "duration_ms": 120.217,
+            "received": true,
+            "success": true,
+            "outcome": "DNS_NOERROR",
+            "rcode": "NOERROR",
+            "aa": true,
+            "tc": false,
+            "ra": false,
+            "answers": 1,
+            "answer_records": [
+              "highway.odot.state.or.us.\t300\tIN\tA\t159.121.71.106"
+            ],
+            "authority": 2,
+            "authority_records": [
+              "odot.state.or.us.\t86400\tIN\tNS\tlion.state.or.us.",
+              "odot.state.or.us.\t86400\tIN\tNS\tpuma.state.or.us."
+            ],
+            "additional": 1,
+            "additional_records": [
+              "\n;; OPT PSEUDOSECTION:\n; EDNS: version 0; flags:; udp: 1232"
+            ]
+          },
+          {
+            "transport": "udp",
+            "server": "198.232.200.20:53",
+            "attempt": 1,
+            "started_at": "2026-11-05T07:16:49.056681781Z",
+            "duration_ms": 37.222,
+            "received": true,
+            "success": true,
+            "outcome": "DNS_NOERROR",
+            "rcode": "NOERROR",
+            "aa": true,
+            "tc": false,
+            "ra": false,
+            "answers": 1,
+            "answer_records": [
+              "highway.odot.state.or.us.\t300\tIN\tA\t159.121.71.106"
+            ],
+            "authority": 2,
+            "authority_records": [
+              "odot.state.or.us.\t86400\tIN\tNS\tpuma.state.or.us.",
+              "odot.state.or.us.\t86400\tIN\tNS\tlion.state.or.us."
+            ],
+            "additional": 1,
+            "additional_records": [
+              "\n;; OPT PSEUDOSECTION:\n; EDNS: version 0; flags:; udp: 1232"
+            ]
+          }
+        ],
+        "findings": [
+          {
+            "rule": "udp_retry_policy",
+            "standard": "Monitor policy",
+            "status": "INCONCLUSIVE",
+            "detail": "Initial UDP attempt succeeded; retry behavior was not exercised"
+          },
+          {
+            "rule": "qr_bit",
+            "standard": "RFC 1035",
+            "status": "PASS",
+            "detail": "Response bit set"
+          },
+          {
+            "rule": "dns_rcode",
+            "standard": "RFC 1035",
+            "status": "PASS",
+            "detail": "NOERROR response received"
+          },
+          {
+            "rule": "qr_bit",
+            "standard": "RFC 1035",
+            "status": "PASS",
+            "detail": "Response bit set"
+          },
+          {
+            "rule": "dns_rcode",
+            "standard": "RFC 1035",
+            "status": "PASS",
+            "detail": "NOERROR response received"
+          },
+          {
+            "rule": "tcp_transport",
+            "standard": "RFC 7766",
+            "status": "OBSERVED",
+            "detail": "Valid DNS response received over TCP"
+          },
+          {
+            "rule": "tc_bit_compliance",
+            "standard": "RFC 2181 Section 9",
+            "status": "INCONCLUSIVE",
+            "detail": "UDP contains required RR data absent from the TCP reference"
+          },
+          {
+            "rule": "expected_answer",
+            "standard": "Configured target expectation",
+            "status": "PASS",
+            "detail": "Received expected NOERROR RCODE and answer set"
+          },
+          {
+            "rule": "expected_answer_tcp",
+            "standard": "Configured target expectation",
+            "status": "PASS",
+            "detail": "TCP baseline: Received expected NOERROR RCODE and answer set"
+          }
+        ],
+        "retry_assessment": "INCONCLUSIVE",
+        "fallback_assessment": "NOT_EXERCISED",
+        "expected_answer_assessment": "PASS",
+        "expected_answer_tcp_assessment": "PASS",
+        "referral_assessment": "FOLLOWED"
+      },
+      {
+        "server_name": "lion.state.or.us.",
+        "server_ip": "198.232.200.20",
+        "qname": "highway.odot.state.or.us.",
+        "qtype": "AAAA",
+        "attempts": [
+          {
+            "transport": "udp",
+            "server": "198.232.200.20:53",
+            "attempt": 1,
+            "started_at": "2026-11-05T07:16:49.09392969Z",
+            "duration_ms": 34.981,
+            "received": true,
+            "success": true,
+            "outcome": "DNS_NOERROR",
+            "rcode": "NOERROR",
+            "aa": true,
+            "tc": false,
+            "ra": false,
+            "answers": 0,
+            "authority": 1,
+            "authority_records": [
+              "odot.state.or.us.\t10800\tIN\tSOA\tlion.state.or.us. dns-admin.state.or.us. 674970254 43200 7200 1814400 10800"
+            ],
+            "additional": 1,
+            "additional_records": [
+              "\n;; OPT PSEUDOSECTION:\n; EDNS: version 0; flags:; udp: 1232"
+            ]
+          },
+          {
+            "transport": "tcp",
+            "server": "198.232.200.20:53",
+            "attempt": 1,
+            "started_at": "2026-11-05T07:16:49.128923109Z",
+            "duration_ms": 75.247,
+            "received": true,
+            "success": true,
+            "outcome": "DNS_NOERROR",
+            "rcode": "NOERROR",
+            "aa": true,
+            "tc": false,
+            "ra": false,
+            "answers": 0,
+            "authority": 1,
+            "authority_records": [
+              "odot.state.or.us.\t10800\tIN\tSOA\tlion.state.or.us. dns-admin.state.or.us. 674970254 43200 7200 1814400 10800"
+            ],
+            "additional": 1,
+            "additional_records": [
+              "\n;; OPT PSEUDOSECTION:\n; EDNS: version 0; flags:; udp: 1232"
+            ]
+          }
+        ],
+        "findings": [
+          {
+            "rule": "udp_retry_policy",
+            "standard": "Monitor policy",
+            "status": "INCONCLUSIVE",
+            "detail": "Initial UDP attempt succeeded; retry behavior was not exercised"
+          },
+          {
+            "rule": "qr_bit",
+            "standard": "RFC 1035",
+            "status": "PASS",
+            "detail": "Response bit set"
+          },
+          {
+            "rule": "dns_rcode",
+            "standard": "RFC 1035",
+            "status": "PASS",
+            "detail": "NOERROR response received"
+          },
+          {
+            "rule": "qr_bit",
+            "standard": "RFC 1035",
+            "status": "PASS",
+            "detail": "Response bit set"
+          },
+          {
+            "rule": "dns_rcode",
+            "standard": "RFC 1035",
+            "status": "PASS",
+            "detail": "NOERROR response received"
+          },
+          {
+            "rule": "tcp_transport",
+            "standard": "RFC 7766",
+            "status": "OBSERVED",
+            "detail": "Valid DNS response received over TCP"
+          },
+          {
+            "rule": "tc_bit_compliance",
+            "standard": "RFC 2181 Section 9",
+            "status": "PASS",
+            "detail": "TC=0 and TCP confirms all required Answer and Authority records were present in UDP"
+          }
+        ],
+        "retry_assessment": "INCONCLUSIVE",
+        "fallback_assessment": "NOT_EXERCISED",
+        "expected_answer_assessment": "NOT_CONFIGURED",
+        "expected_answer_tcp_assessment": "NOT_CONFIGURED",
+        "referral_assessment": "NOT_NEEDED"
+      },
+      {
+        "server_name": "puma.state.or.us.",
+        "server_ip": "198.232.202.40",
+        "qname": "highway.odot.state.or.us.",
+        "qtype": "A",
+        "attempts": [
+          {
+            "transport": "udp",
+            "server": "198.232.202.40:53",
+            "attempt": 1,
+            "started_at": "2026-11-05T07:16:49.204196745Z",
+            "duration_ms": 64.864,
+            "received": true,
+            "success": true,
+            "outcome": "DNS_NOERROR",
+            "rcode": "NOERROR",
+            "aa": true,
+            "tc": false,
+            "ra": false,
+            "answers": 1,
+            "answer_records": [
+              "highway.odot.state.or.us.\t300\tIN\tA\t159.121.71.106"
+            ],
+            "authority": 2,
+            "authority_records": [
+              "odot.state.or.us.\t86400\tIN\tNS\tpuma.state.or.us.",
+              "odot.state.or.us.\t86400\tIN\tNS\tlion.state.or.us."
+            ],
+            "additional": 1,
+            "additional_records": [
+              "\n;; OPT PSEUDOSECTION:\n; EDNS: version 0; flags:; udp: 1232"
+            ]
+          },
+          {
+            "transport": "tcp",
+            "server": "198.232.202.40:53",
+            "attempt": 1,
+            "started_at": "2026-11-05T07:16:49.269078895Z",
+            "duration_ms": 99.99,
+            "received": true,
+            "success": true,
+            "outcome": "DNS_NOERROR",
+            "rcode": "NOERROR",
+            "aa": true,
+            "tc": false,
+            "ra": false,
+            "answers": 1,
+            "answer_records": [
+              "highway.odot.state.or.us.\t300\tIN\tA\t159.121.71.106"
+            ],
+            "authority": 2,
+            "authority_records": [
+              "odot.state.or.us.\t86400\tIN\tNS\tpuma.state.or.us.",
+              "odot.state.or.us.\t86400\tIN\tNS\tlion.state.or.us."
+            ],
+            "additional": 1,
+            "additional_records": [
+              "\n;; OPT PSEUDOSECTION:\n; EDNS: version 0; flags:; udp: 1232"
+            ]
+          }
+        ],
+        "findings": [
+          {
+            "rule": "udp_retry_policy",
+            "standard": "Monitor policy",
+            "status": "INCONCLUSIVE",
+            "detail": "Initial UDP attempt succeeded; retry behavior was not exercised"
+          },
+          {
+            "rule": "qr_bit",
+            "standard": "RFC 1035",
+            "status": "PASS",
+            "detail": "Response bit set"
+          },
+          {
+            "rule": "dns_rcode",
+            "standard": "RFC 1035",
+            "status": "PASS",
+            "detail": "NOERROR response received"
+          },
+          {
+            "rule": "qr_bit",
+            "standard": "RFC 1035",
+            "status": "PASS",
+            "detail": "Response bit set"
+          },
+          {
+            "rule": "dns_rcode",
+            "standard": "RFC 1035",
+            "status": "PASS",
+            "detail": "NOERROR response received"
+          },
+          {
+            "rule": "tcp_transport",
+            "standard": "RFC 7766",
+            "status": "OBSERVED",
+            "detail": "Valid DNS response received over TCP"
+          },
+          {
+            "rule": "tc_bit_compliance",
+            "standard": "RFC 2181 Section 9",
+            "status": "PASS",
+            "detail": "TC=0 and TCP confirms all required Answer and Authority records were present in UDP"
+          },
+          {
+            "rule": "expected_answer",
+            "standard": "Configured target expectation",
+            "status": "PASS",
+            "detail": "Received expected NOERROR RCODE and answer set"
+          },
+          {
+            "rule": "expected_answer_tcp",
+            "standard": "Configured target expectation",
+            "status": "PASS",
+            "detail": "TCP baseline: Received expected NOERROR RCODE and answer set"
+          }
+        ],
+        "retry_assessment": "INCONCLUSIVE",
+        "fallback_assessment": "NOT_EXERCISED",
+        "expected_answer_assessment": "PASS",
+        "expected_answer_tcp_assessment": "PASS",
+        "referral_assessment": "NOT_NEEDED"
+      },
+      {
+        "server_name": "puma.state.or.us.",
+        "server_ip": "198.232.202.40",
+        "qname": "highway.odot.state.or.us.",
+        "qtype": "AAAA",
+        "attempts": [
+          {
+            "transport": "udp",
+            "server": "198.232.202.40:53",
+            "attempt": 1,
+            "started_at": "2026-11-05T07:16:49.369144304Z",
+            "duration_ms": 54.867,
+            "received": true,
+            "success": true,
+            "outcome": "DNS_NOERROR",
+            "rcode": "NOERROR",
+            "aa": true,
+            "tc": false,
+            "ra": false,
+            "answers": 0,
+            "authority": 1,
+            "authority_records": [
+              "odot.state.or.us.\t10800\tIN\tSOA\tlion.state.or.us. dns-admin.state.or.us. 674970254 43200 7200 1814400 10800"
+            ],
+            "additional": 1,
+            "additional_records": [
+              "\n;; OPT PSEUDOSECTION:\n; EDNS: version 0; flags:; udp: 1232"
+            ]
+          },
+          {
+            "transport": "tcp",
+            "server": "198.232.202.40:53",
+            "attempt": 1,
+            "started_at": "2026-11-05T07:16:49.424027158Z",
+            "duration_ms": 70.016,
+            "received": true,
+            "success": true,
+            "outcome": "DNS_NOERROR",
+            "rcode": "NOERROR",
+            "aa": true,
+            "tc": false,
+            "ra": false,
+            "answers": 0,
+            "authority": 1,
+            "authority_records": [
+              "odot.state.or.us.\t10800\tIN\tSOA\tlion.state.or.us. dns-admin.state.or.us. 674970254 43200 7200 1814400 10800"
+            ],
+            "additional": 1,
+            "additional_records": [
+              "\n;; OPT PSEUDOSECTION:\n; EDNS: version 0; flags:; udp: 1232"
+            ]
+          }
+        ],
+        "findings": [
+          {
+            "rule": "udp_retry_policy",
+            "standard": "Monitor policy",
+            "status": "INCONCLUSIVE",
+            "detail": "Initial UDP attempt succeeded; retry behavior was not exercised"
+          },
+          {
+            "rule": "qr_bit",
+            "standard": "RFC 1035",
+            "status": "PASS",
+            "detail": "Response bit set"
+          },
+          {
+            "rule": "dns_rcode",
+            "standard": "RFC 1035",
+            "status": "PASS",
+            "detail": "NOERROR response received"
+          },
+          {
+            "rule": "qr_bit",
+            "standard": "RFC 1035",
+            "status": "PASS",
+            "detail": "Response bit set"
+          },
+          {
+            "rule": "dns_rcode",
+            "standard": "RFC 1035",
+            "status": "PASS",
+            "detail": "NOERROR response received"
+          },
+          {
+            "rule": "tcp_transport",
+            "standard": "RFC 7766",
+            "status": "OBSERVED",
+            "detail": "Valid DNS response received over TCP"
+          },
+          {
+            "rule": "tc_bit_compliance",
+            "standard": "RFC 2181 Section 9",
+            "status": "PASS",
+            "detail": "TC=0 and TCP confirms all required Answer and Authority records were present in UDP"
+          }
+        ],
+        "retry_assessment": "INCONCLUSIVE",
+        "fallback_assessment": "NOT_EXERCISED",
+        "expected_answer_assessment": "NOT_CONFIGURED",
+        "expected_answer_tcp_assessment": "NOT_CONFIGURED",
+        "referral_assessment": "NOT_NEEDED"
+      }
+    ]
+  },
+  {
+    "started_at": "2026-11-05T07:16:49.494069296Z",
+    "finished_at": "2026-11-05T07:16:49.784223375Z",
+    "target": "_acme-challenge.zmsa.odot.state.or.us",
+    "source_ip": "69.168.127.224",
+    "source_region_name": "Oregon",
+    "source_city": "McMinnville",
+    "source_asn": "AS13857",
+    "source_asn_org": "Online Northwest",
+    "discovery": {
+      "queried_name": "_acme-challenge.zmsa.odot.state.or.us.",
+      "zone_name": "zmsa.odot.state.or.us.",
+      "nameservers": [
+        {
+          "name": "puma.state.or.us.",
+          "ips": [
+            "198.232.202.40"
+          ]
+        },
+        {
+          "name": "lion.state.or.us.",
+          "ips": [
+            "198.232.200.20"
+          ]
+        }
+      ],
+      "discovery_method": "recursive-resolver SOA walk + NS lookup"
+    },
+    "tests": [
+      {
+        "server_name": "puma.state.or.us.",
+        "server_ip": "198.232.202.40",
+        "qname": "_acme-challenge.zmsa.odot.state.or.us.",
+        "qtype": "CNAME",
+        "attempts": [
+          {
+            "transport": "udp",
+            "server": "198.232.202.40:53",
+            "attempt": 1,
+            "started_at": "2026-11-05T07:16:49.498133918Z",
+            "duration_ms": 65.928,
+            "received": true,
+            "success": true,
+            "outcome": "DNS_NOERROR",
+            "rcode": "NOERROR",
+            "aa": true,
+            "tc": false,
+            "ra": false,
+            "answers": 1,
+            "answer_records": [
+              "_acme-challenge.zmsa.odot.state.or.us.\t28800\tIN\tCNAME\t07ce0f8572ce5522b2413e4a41f07a9b.autocerts.ves.volterra.io."
+            ],
+            "authority": 2,
+            "authority_records": [
+              "zmsa.odot.state.or.us.\t86400\tIN\tNS\tpuma.state.or.us.",
+              "zmsa.odot.state.or.us.\t86400\tIN\tNS\tlion.state.or.us."
+            ],
+            "additional": 1,
+            "additional_records": [
+              "\n;; OPT PSEUDOSECTION:\n; EDNS: version 0; flags:; udp: 1232"
+            ]
+          },
+          {
+            "transport": "tcp",
+            "server": "198.232.202.40:53",
+            "attempt": 1,
+            "started_at": "2026-11-05T07:16:49.564079544Z",
+            "duration_ms": 106.853,
+            "received": true,
+            "success": true,
+            "outcome": "DNS_NOERROR",
+            "rcode": "NOERROR",
+            "aa": true,
+            "tc": false,
+            "ra": false,
+            "answers": 1,
+            "answer_records": [
+              "_acme-challenge.zmsa.odot.state.or.us.\t28800\tIN\tCNAME\t07ce0f8572ce5522b2413e4a41f07a9b.autocerts.ves.volterra.io."
+            ],
+            "authority": 2,
+            "authority_records": [
+              "zmsa.odot.state.or.us.\t86400\tIN\tNS\tpuma.state.or.us.",
+              "zmsa.odot.state.or.us.\t86400\tIN\tNS\tlion.state.or.us."
+            ],
+            "additional": 1,
+            "additional_records": [
+              "\n;; OPT PSEUDOSECTION:\n; EDNS: version 0; flags:; udp: 1232"
+            ]
+          }
+        ],
+        "findings": [
+          {
+            "rule": "udp_retry_policy",
+            "standard": "Monitor policy",
+            "status": "INCONCLUSIVE",
+            "detail": "Initial UDP attempt succeeded; retry behavior was not exercised"
+          },
+          {
+            "rule": "qr_bit",
+            "standard": "RFC 1035",
+            "status": "PASS",
+            "detail": "Response bit set"
+          },
+          {
+            "rule": "dns_rcode",
+            "standard": "RFC 1035",
+            "status": "PASS",
+            "detail": "NOERROR response received"
+          },
+          {
+            "rule": "qr_bit",
+            "standard": "RFC 1035",
+            "status": "PASS",
+            "detail": "Response bit set"
+          },
+          {
+            "rule": "dns_rcode",
+            "standard": "RFC 1035",
+            "status": "PASS",
+            "detail": "NOERROR response received"
+          },
+          {
+            "rule": "tcp_transport",
+            "standard": "RFC 7766",
+            "status": "OBSERVED",
+            "detail": "Valid DNS response received over TCP"
+          },
+          {
+            "rule": "tc_bit_compliance",
+            "standard": "RFC 2181 Section 9",
+            "status": "PASS",
+            "detail": "TC=0 and TCP confirms all required Answer and Authority records were present in UDP"
+          },
+          {
+            "rule": "expected_answer",
+            "standard": "Configured target expectation",
+            "status": "PASS",
+            "detail": "Received expected NOERROR RCODE and answer set"
+          },
+          {
+            "rule": "expected_answer_tcp",
+            "standard": "Configured target expectation",
+            "status": "PASS",
+            "detail": "TCP baseline: Received expected NOERROR RCODE and answer set"
+          }
+        ],
+        "retry_assessment": "INCONCLUSIVE",
+        "fallback_assessment": "NOT_EXERCISED",
+        "expected_answer_assessment": "PASS",
+        "expected_answer_tcp_assessment": "PASS",
+        "referral_assessment": "NOT_NEEDED"
+      },
+      {
+        "server_name": "lion.state.or.us.",
+        "server_ip": "198.232.200.20",
+        "qname": "_acme-challenge.zmsa.odot.state.or.us.",
+        "qtype": "CNAME",
+        "attempts": [
+          {
+            "transport": "udp",
+            "server": "198.232.200.20:53",
+            "attempt": 1,
+            "started_at": "2026-11-05T07:16:49.670966244Z",
+            "duration_ms": 33.186,
+            "received": true,
+            "success": true,
+            "outcome": "DNS_NOERROR",
+            "rcode": "NOERROR",
+            "aa": true,
+            "tc": false,
+            "ra": false,
+            "answers": 1,
+            "answer_records": [
+              "_acme-challenge.zmsa.odot.state.or.us.\t28800\tIN\tCNAME\t07ce0f8572ce5522b2413e4a41f07a9b.autocerts.ves.volterra.io."
+            ],
+            "authority": 2,
+            "authority_records": [
+              "zmsa.odot.state.or.us.\t86400\tIN\tNS\tpuma.state.or.us.",
+              "zmsa.odot.state.or.us.\t86400\tIN\tNS\tlion.state.or.us."
+            ],
+            "additional": 1,
+            "additional_records": [
+              "\n;; OPT PSEUDOSECTION:\n; EDNS: version 0; flags:; udp: 1232"
+            ]
+          },
+          {
+            "transport": "tcp",
+            "server": "198.232.200.20:53",
+            "attempt": 1,
+            "started_at": "2026-11-05T07:16:49.704162891Z",
+            "duration_ms": 80.038,
+            "received": true,
+            "success": true,
+            "outcome": "DNS_NOERROR",
+            "rcode": "NOERROR",
+            "aa": true,
+            "tc": false,
+            "ra": false,
+            "answers": 1,
+            "answer_records": [
+              "_acme-challenge.zmsa.odot.state.or.us.\t28800\tIN\tCNAME\t07ce0f8572ce5522b2413e4a41f07a9b.autocerts.ves.volterra.io."
+            ],
+            "authority": 2,
+            "authority_records": [
+              "zmsa.odot.state.or.us.\t86400\tIN\tNS\tlion.state.or.us.",
+              "zmsa.odot.state.or.us.\t86400\tIN\tNS\tpuma.state.or.us."
+            ],
+            "additional": 1,
+            "additional_records": [
+              "\n;; OPT PSEUDOSECTION:\n; EDNS: version 0; flags:; udp: 1232"
+            ]
+          }
+        ],
+        "findings": [
+          {
+            "rule": "udp_retry_policy",
+            "standard": "Monitor policy",
+            "status": "INCONCLUSIVE",
+            "detail": "Initial UDP attempt succeeded; retry behavior was not exercised"
+          },
+          {
+            "rule": "qr_bit",
+            "standard": "RFC 1035",
+            "status": "PASS",
+            "detail": "Response bit set"
+          },
+          {
+            "rule": "dns_rcode",
+            "standard": "RFC 1035",
+            "status": "PASS",
+            "detail": "NOERROR response received"
+          },
+          {
+            "rule": "qr_bit",
+            "standard": "RFC 1035",
+            "status": "PASS",
+            "detail": "Response bit set"
+          },
+          {
+            "rule": "dns_rcode",
+            "standard": "RFC 1035",
+            "status": "PASS",
+            "detail": "NOERROR response received"
+          },
+          {
+            "rule": "tcp_transport",
+            "standard": "RFC 7766",
+            "status": "OBSERVED",
+            "detail": "Valid DNS response received over TCP"
+          },
+          {
+            "rule": "tc_bit_compliance",
+            "standard": "RFC 2181 Section 9",
+            "status": "PASS",
+            "detail": "TC=0 and TCP confirms all required Answer and Authority records were present in UDP"
+          },
+          {
+            "rule": "expected_answer",
+            "standard": "Configured target expectation",
+            "status": "PASS",
+            "detail": "Received expected NOERROR RCODE and answer set"
+          },
+          {
+            "rule": "expected_answer_tcp",
+            "standard": "Configured target expectation",
+            "status": "PASS",
+            "detail": "TCP baseline: Received expected NOERROR RCODE and answer set"
+          }
+        ],
+        "retry_assessment": "INCONCLUSIVE",
+        "fallback_assessment": "NOT_EXERCISED",
+        "expected_answer_assessment": "PASS",
+        "expected_answer_tcp_assessment": "PASS",
+        "referral_assessment": "NOT_NEEDED"
+      }
+    ]
+  }
+]
